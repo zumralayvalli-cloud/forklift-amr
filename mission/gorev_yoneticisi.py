@@ -12,13 +12,11 @@ class Durum(Enum):
     ACIL_DURUS = auto()
 
 
-# Simülasyon: her durumun süresi (saniye). Gerçek robotta sensörler/olaylar belirler.
+# Sadece süreyle biten durumlar (kaldırma mekanizması simülasyonu).
+# Diğer durumlar QR okunca biter.
 SURELER = {
-    Durum.YUKE_GIT: 3,
     Durum.YUKLE: 2,
-    Durum.BIRAKMAYA_GIT: 3,
     Durum.BIRAK: 2,
-    Durum.GERI_DON: 3,
 }
 
 SONRAKI = {
@@ -28,6 +26,8 @@ SONRAKI = {
     Durum.BIRAK: Durum.GERI_DON,
     Durum.GERI_DON: Durum.BEKLE,
 }
+
+BASLANGIC_QR = "HOME"
 
 
 class GorevYoneticisi:
@@ -42,6 +42,30 @@ class GorevYoneticisi:
         print(f"[{self.durum.name}] -> [{yeni.name}]")
         self.durum = yeni
         self.gecen = 0.0
+        if yeni == Durum.BEKLE:
+            print("Görev tamamlandı\n")
+            self.gorev = None
+
+    def beklenen_qr(self):
+        if self.gorev is None:
+            return None
+        if self.durum == Durum.YUKE_GIT:
+            return self.gorev[0]
+        if self.durum == Durum.BIRAKMAYA_GIT:
+            return self.gorev[1]
+        if self.durum == Durum.GERI_DON:
+            return BASLANGIC_QR
+        return None
+
+    def qr_okundu(self, veri):
+        beklenen = self.beklenen_qr()
+        if beklenen is None:
+            return  # şu an QR beklenmiyor (veya acil duruştayız)
+        if veri == beklenen:
+            print(f"QR doğrulandı: {veri}")
+            self._gec(SONRAKI[self.durum])
+        else:
+            print(f"Yanlış QR: {veri} (beklenen: {beklenen})")
 
     def gorev_al(self, yuk_noktasi, birakma_noktasi):
         if self.durum != Durum.BEKLE:
@@ -67,31 +91,19 @@ class GorevYoneticisi:
         self.gecen = kayit
 
     def adim(self, dt):
-        if self.durum in (Durum.BEKLE, Durum.ACIL_DURUS):
+        if self.durum not in SURELER:
             return
         self.gecen += dt
         if self.gecen >= SURELER[self.durum]:
             self._gec(SONRAKI[self.durum])
-            if self.durum == Durum.BEKLE:
-                print("Görev tamamlandı\n")
-                self.gorev = None
 
 
 if __name__ == "__main__":
     robot = GorevYoneticisi()
-    DT = 0.5
-    t = 0.0
-    while t < 22:
-        if t == 1.0:
-            robot.gorev_al("A1", "B2")
-        if t == 5.0:
-            print("!!! Kill switch basıldı")
-            robot.acil_durdur()
-        if t == 8.0:
-            print("Kill switch bırakıldı")
-            robot.devam_et()
-        if t == 10.0:
-            robot.gorev_al("C1", "D1")  # robot meşgulken reddedilmeli
-        robot.adim(DT)
-        t += DT
-        time.sleep(DT / 5)  # simülasyonu hızlandır
+    robot.gorev_al("A1", "B2")
+    for qr, bekle in [("X9", 0), ("A1", 2.5), ("B2", 2.5), ("HOME", 0)]:
+        robot.qr_okundu(qr)
+        t = 0.0
+        while t < bekle:
+            robot.adim(0.5)
+            t += 0.5

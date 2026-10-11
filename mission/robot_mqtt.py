@@ -17,6 +17,7 @@ def baglandi(client, userdata, flags, reason_code, properties):
     print("Broker'a bağlandı:", reason_code)
     client.subscribe("amr/gorev")
     client.subscribe("amr/kill")
+    client.subscribe("amr/qr")
 
 
 def mesaj_geldi(client, userdata, msg):
@@ -35,7 +36,8 @@ def mesaj_geldi(client, userdata, msg):
             else:
                 print("Kill switch bırakıldı")
                 robot.devam_et()
-
+        elif msg.topic == "amr/qr":
+            robot.qr_okundu(metin.strip())
 
 client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 client.on_connect = baglandi
