@@ -7,7 +7,7 @@ import time
 # Ek Teknik Şartname: PLC simülatörü UDP, 192.168.100.100:1515
 PLC_IP = os.environ.get("PLC_IP", "192.168.100.100")
 PLC_PORT = int(os.environ.get("PLC_PORT", "1515"))
-PERIYOT = 0.9          # saniyede bir PAKET_TX
+PERIYOT = 0.9          # yaklaşık saniyede bir PAKET_TX (1 sn zaman aşımına karşı pay bırakır)
 YANIT_BEKLEME = 0.5    # bir pakete cevap için beklenen süre
 
 
@@ -31,6 +31,7 @@ class PlcIstemci(threading.Thread):
         self.robot = robot
         self.kilit = kilit
         self.adres = (ip, port)
+        robot.plc_adres = f"{ip}:{port}"
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.settimeout(YANIT_BEKLEME)
         self._dur = threading.Event()
@@ -47,6 +48,8 @@ class PlcIstemci(threading.Thread):
                 bilgi = self.robot.paket_bilgisi()
             try:
                 self.sock.sendto(tx_paketi(*bilgi), self.adres)
+                with self.kilit:
+                    self.robot.giden_kaydet(bilgi)
                 self._yanit_bekle(bilgi[0])
             except OSError as hata:
                 self._kayip(f"ağ hatası: {hata}")

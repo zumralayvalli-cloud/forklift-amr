@@ -1,4 +1,5 @@
 import math
+import time
 from enum import Enum
 
 
@@ -30,6 +31,8 @@ BIRAKMA_SURESI = 2.0
 HEDEF_SURE = 30 * 60
 UST_LIMIT = 45 * 60
 
+KONTROL_ADI = {1: "Bekle", 2: "Başla/Devam et"}
+
 
 class GorevYoneticisi:
     def __init__(self):
@@ -47,9 +50,14 @@ class GorevYoneticisi:
         self.son_qr = None
         self.hata_mesaji = None
         self.plc_bagli = False
-        self.mesajlar = []           # arayüz için: ("gelen"/"giden", içerik)
+        self.mesajlar = []           # arayüz için: gelen/giden mesajlar
         self._kayit_acil = None
         self._kayit_hata = None
+        self.qr_gecmisi = []         # arayüz için: son okunan QR kodlar
+        self.plc_son_cevap = None    # PLC'den son paketin geldiği zaman (time.time)
+        self.plc_adres = ""
+        self.uzaktan_hedef = (0, 0)  # uzaktan manuel sürüş komutu (sol, sağ)
+        self._son_mesaj = {"gelen": None, "giden": None}
 
     # ---------- yardımcılar ----------
     def _gec(self, yeni, faz=""):
@@ -58,6 +66,24 @@ class GorevYoneticisi:
         self.durum = yeni
         self.faz = faz
         self.gecen = 0.0
+
+    def mesaj_ekle(self, yon, metin, anahtar=None):
+        """Arayüzdeki mesaj listesi. Aynı yöndeki değişmeyen mesajları tekrar yazmaz."""
+        anahtar = metin if anahtar is None else anahtar
+        if self._son_mesaj.get(yon) == anahtar:
+            return
+        self._son_mesaj[yon] = anahtar
+        self.mesajlar.append({"zaman": time.strftime("%H:%M:%S"), "yon": yon, "metin": metin})
+        del self.mesajlar[:-100]
+
+    def giden_kaydet(self, bilgi):
+        """PLC'ye gönderilen PAKET_TX'i mesaj listesine yazar."""
+        durum, alim, birakma, x, y = bilgi
+        ad = Durum(durum).name
+        gorev = f"A{alim}→B{birakma}" if alim and birakma else "görev yok"
+        self.mesaj_ekle("giden",
+                        f"PAKET_TX durum={durum} ({ad}) · {gorev} · x={x:.2f} y={y:.2f}",
+                        anahtar=(durum, alim, birakma))
 
     def konum_guncelle(self, x_m, y_m):
         self.konum = (x_m, y_m)
@@ -72,15 +98,23 @@ class GorevYoneticisi:
         """Kullanıcı arayüzü için tüm bilgiler tek yerde."""
         return {
             "durum": self.durum.name,
+            "durum_kodu": self.durum.value,
             "faz": self.faz,
             "mod": self.mod,
             "gorev": self.gorev,
             "yuklu": self.yuklu,
+            "beklenen_qr": self.beklenen_qr(),
             "son_qr": self.son_qr,
+            "qr_gecmisi": list(self.qr_gecmisi),
             "plc_bagli": self.plc_bagli,
+            "plc_adres": self.plc_adres,
+            "plc_son_cevap": self.plc_son_cevap,
             "hata": self.hata_mesaji,
             "konum": self.konum,
+            "uzaktan_hedef": self.uzaktan_hedef,
             "gecen_sure_sn": round(self.toplam_sure, 1),
+            "hedef_sure_sn": HEDEF_SURE,
+            "mesajlar": list(self.mesajlar[-50:]),
         }
 
     def beklenen_qr(self):
@@ -121,7 +155,11 @@ class GorevYoneticisi:
     def plc_rx(self, alim, birakma, kontrol, gonderilen_durum):
         """PLC'den gelen PAKET_RX. gonderilen_durum: bu cevabın ait olduğu PAKET_TX'teki durum kodu."""
         self.plc_bagli = True
-        self.mesajlar.append(("gelen", {"alim": alim, "birakma": birakma, "kontrol": kontrol}))
+        self.plc_son_cevap = time.time()
+        gorev = f"A{alim}→B{birakma}" if alim and birakma else "görev yok"
+        self.mesaj_ekle("gelen",
+                        f"PAKET_RX {gorev} · kontrol={kontrol} ({KONTROL_ADI.get(kontrol, '?')})",
+                        anahtar=(alim, birakma, kontrol))
 
         if (alim, birakma) == (0, 0):
             self.son_biten = None  # PLC görevi sıfırladı, yeni görev kabul edilebilir
@@ -143,16 +181,23 @@ class GorevYoneticisi:
                 print("PLC: kapı açık, geçiş izni verildi")
                 self._gec(durum, faz)
 
+    def _qr_kaydet(self, veri, sonuc):
+        self.qr_gecmisi.append({"zaman": time.strftime("%H:%M:%S"), "veri": veri, "sonuc": sonuc})
+        del self.qr_gecmisi[:-15]
+
     def qr_okundu(self, veri):
-        veri = veri.strip().upper()
+        veri = veri.strip().upper()[:40]
         self.son_qr = veri
         beklenen = self.beklenen_qr()
         if beklenen is None:
+            self._qr_kaydet(veri, "şu an beklenmiyor")
             return
         if veri != beklenen:
             print(f"Yanlış QR: {veri} (beklenen: {beklenen})")
+            self._qr_kaydet(veri, f"yanlış (beklenen: {beklenen})")
             return
         print(f"QR doğrulandı: {veri}")
+        self._qr_kaydet(veri, "doğrulandı")
         d, f = self.durum, self.faz
         if d == Durum.YUKSUZ_HAREKET and f == "alma_noktasina_gidiyor":
             self._gec(Durum.YUKSUZ_HAREKET, "yukleniyor")
@@ -171,6 +216,7 @@ class GorevYoneticisi:
         if self.durum == Durum.ACIL_STOP:
             return
         self._kayit_acil = (self.durum, self.faz, self.gecen)
+        self.uzaktan_hedef = (0, 0)
         self._gec(Durum.ACIL_STOP)
 
     def devam_et(self):
@@ -204,17 +250,20 @@ class GorevYoneticisi:
         if yeni != self.mod:
             print(f"Mod: {self.mod} -> {yeni}")
             self.mod = yeni
+            self.uzaktan_hedef = (0, 0)  # mod değişince robot durur
 
     def uzaktan_komut(self, sol, sag):
-        """Uzaktan manuel sürüş. Sadece manuel modda ve acil stop yokken çalışır."""
+        """Uzaktan manuel sürüş. Sadece manuel modda ve acil stop yokken çalışır.
+        (kabul_edildi, neden) döner."""
         if self.mod != "manuel":
             print("Uzaktan kontrol reddedildi: anahtar OTOMATİK konumda")
-            return False
+            return False, "Anahtar OTOMATİK konumda, uzaktan kontrol kapalı"
         if self.durum == Durum.ACIL_STOP:
             print("Uzaktan kontrol reddedildi: acil stop aktif")
-            return False
+            return False, "Acil stop aktif"
+        self.uzaktan_hedef = (sol, sag)
         print(f"Uzaktan komut: V,{sol},{sag}")
-        return True
+        return True, ""
 
     # ---------- zaman ----------
     def adim(self, dt):
