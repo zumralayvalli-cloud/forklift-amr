@@ -49,6 +49,9 @@ def generate_launch_description():
         executable="rviz2",
         arguments=["-d", os.path.join(paket, "rviz", "harita.rviz")],
         parameters=[{"use_sim_time": True}],
+        # Sanal makinenin ekran kartı sürücüsüyle RViz haritayı ve LiDAR noktalarını
+        # çizemiyor; RViz yazılımsal çizimle açılır (2B harita için yeterince hızlı).
+        additional_env={"LIBGL_ALWAYS_SOFTWARE": "1"},
         output="log",
     )
 
