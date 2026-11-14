@@ -10,6 +10,7 @@ bırakma noktasına taşır; yol üzerindeki kontrollü kapıdan izin alarak ge�
 |---|---|
 | `mission/` | Görev mantığı: durum makinesi, PLC haberleşmesi, kullanıcı arayüzü |
 | `vision/` | Görüntü işleme: QR okuma, çizgi takibi |
+| `ros/forklift_sim/` | ROS 2 paketi: Gazebo'da yarışma sahası ve robot modeli |
 
 ### mission/
 
@@ -68,6 +69,27 @@ python3 vision/test_cizgi_takibi.py        # kamerasız test
 python3 vision/cizgi_takibi.py             # kamera ile canlı
 python3 vision/cizgi_takibi.py --ayarla    # renk aralığını ayarla (s = kaydet, q = çık)
 ```
+
+## Simülasyon
+
+ROS 2 Jazzy ve Gazebo Harmonic kurulu bir Ubuntu 24.04 üzerinde:
+
+```bash
+mkdir -p ~/ros2_ws/src && cd ~/ros2_ws/src
+git clone https://github.com/zumralayvalli-cloud/forklift-amr.git
+cd ~/ros2_ws && colcon build --symlink-install
+source install/setup.bash
+ros2 launch forklift_sim sim.launch.py
+```
+
+Robotu klavyeyle sürmek için ikinci bir terminalde:
+
+```bash
+ros2 run teleop_twist_keyboard teleop_twist_keyboard
+```
+
+Saha ölçülerini değiştirmek için `ros/forklift_sim/scripts/saha_uret.py` dosyasının
+başındaki sayıları düzenleyip betiği yeniden çalıştırın.
 
 ## Durum
 

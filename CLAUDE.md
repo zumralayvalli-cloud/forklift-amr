@@ -46,6 +46,13 @@ Arayüzde eksik her bilgi −4. Anahtar otomatikteyken uzaktan kontrol yapılama
   zorunlu olduğu için hazır araçlar (slam_toolbox, Nav2) kullanılacak.
 - Geliştirme makinesi M4 Mac (16 GB). ROS ve Gazebo, UTM içindeki Ubuntu sanal
   makinesinde (`forklift-ros`, 8 GB bellek, 6 çekirdek, 64 GB disk) çalışır.
+- Sanal makinede Gazebo'nun varsayılan çizim motoru (ogre2) çöküyor; her zaman
+  `--render-engine ogre` ile açılır. `sim.launch.py` ve dünyadaki Sensors eklentisi
+  bunu zaten yapıyor. Yazılımsal çizim (`LIBGL_ALWAYS_SOFTWARE=1`) yedek seçenek.
+- ROS paketleri `ros/` altında durur. Repo, sanal makinede `~/ros2_ws/src/forklift-amr`
+  olarak klonlanır ve `~/ros2_ws` içinde `colcon build` ile derlenir.
+- Saha ölçüleri tek yerde: `ros/forklift_sim/scripts/saha_uret.py`. `worlds/saha.sdf`
+  bu betikle üretilir, elle düzenlenmez. Koordinat orijini sahanın sol alt köşesi.
 - Mevcut `mission/` kodu düz Python olarak kalır ve Mac'te doğrudan çalışır; ileride
   ROS 2 içinde bir düğüm olarak sarılacak, baştan yazılmayacak.
 - Robot bilgisayarı olarak Raspberry Pi 5 düşünülüyor (aynı Ubuntu ve ROS sürümü).
@@ -69,15 +76,17 @@ Ubuntu 24.04.3 ARM masaüstü ISO'su çekirdeği internetten indirir; internetsi
 | Kullanıcı arayüzü | Hazır; rota tanımlama ve harita ekranı yok |
 | QR okuma | Metin okunuyor; kameraya göre konum hesabı yok |
 | Çizgi takibi | Algılama hazır (sapma ve açı), sürüşe bağlı değil; piksel → mm kalibrasyonu yok |
-| Sürüş, odometri, konum | Yok (PLC'ye konum 0,00 gidiyor) |
+| Simülasyon (`ros/forklift_sim`) | Saha duvarları, yer işaretleri, diferansiyel sürüşlü robot ve LiDAR yazıldı; Gazebo'da henüz denenmedi. Kapı, şerit, QR görselleri, kamera, çatal yok |
+| Sürüş, odometri, konum | Simülasyonda `/cmd_vel`, `/odom`, `/scan` var; PLC paketine bağlı değil (konum 0,00 gidiyor) |
 | Haritalama, rota planlama | Yok |
 | Engelde durma | Yok |
 | Kaldırma, acil stop, mod anahtarı donanımı | Yok (mod yalnızca geliştirme panelinden değişiyor) |
 
 ## Yol haritası
 
-1. Ubuntu sanal makinesine ROS 2 Jazzy ve Gazebo kurulumu.
-2. Gazebo'da saha (18 × 10 m, kapı, QR noktaları, şeritler) ve basit robot modeli.
+1. ~~Ubuntu sanal makinesine ROS 2 Jazzy ve Gazebo kurulumu.~~ Tamamlandı.
+2. Gazebo'da saha ve basit robot modeli: ilk sürüm yazıldı, sanal makinede denenecek.
+   Sonra kapı, şeritler, QR görselleri ve kamera eklenecek.
 3. Sürüş ve odometri; konumu PLC paketine bağlamak.
 4. Haritalama (slam_toolbox) ve haritayı kaydetme.
 5. Arayüzde rota tanımlama, en kısa yol hesabı, yol takibi.
@@ -92,6 +101,14 @@ Ubuntu 24.04.3 ARM masaüstü ISO'su çekirdeği internetten indirir; internetsi
 python3 mission/plc_sim.py                                         # sahte PLC
 PLC_IP=127.0.0.1 GELISTIRME=1 python3 mission/robot_ana.py         # robot + arayüz :8080
 python3 vision/test_cizgi_takibi.py                                # çizgi takibi testi
+```
+
+Simülasyon (Ubuntu sanal makinesinde):
+
+```bash
+cd ~/ros2_ws && colcon build --symlink-install && source install/setup.bash
+ros2 launch forklift_sim sim.launch.py                      # saha + robot
+ros2 run teleop_twist_keyboard teleop_twist_keyboard        # ayrı terminalde klavyeyle sürüş
 ```
 
 MQTT yalnızca robot içi girişler için kullanılıyor: `amr/qr` (okunan QR metni),
