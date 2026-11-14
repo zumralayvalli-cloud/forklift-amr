@@ -1,0 +1,331 @@
+<?xml version="1.0"?>
+<!-- Bu dosya scripts/saha_uret.py tarafından üretilir; elle düzenlemeyin. -->
+<sdf version="1.9">
+  <world name="saha">
+    <physics name="2ms" type="ignored">
+      <max_step_size>0.002</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre</render_engine>
+    </plugin>
+
+    <light type="directional" name="gunes">
+      <cast_shadows>false</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.9 0.9 0.9 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <direction>-0.3 0.2 -0.9</direction>
+    </light>
+
+    <model name="zemin">
+      <static>true</static>
+      <pose>9.0 5.0 0 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><plane><normal>0 0 1</normal><size>40 30</size></plane></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><plane><normal>0 0 1</normal><size>40 30</size></plane></geometry>
+          <material><ambient>0.45 0.45 0.45 1</ambient><diffuse>0.45 0.45 0.45 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="duvar_0">
+      <static>true</static>
+      <pose>3.750 0.000 0.25 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>7.600 0.1 0.5</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>7.600 0.1 0.5</size></box></geometry>
+          <material><ambient>0.75 0.75 0.7 1</ambient><diffuse>0.75 0.75 0.7 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="duvar_1">
+      <static>true</static>
+      <pose>3.750 10.000 0.25 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>7.600 0.1 0.5</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>7.600 0.1 0.5</size></box></geometry>
+          <material><ambient>0.75 0.75 0.7 1</ambient><diffuse>0.75 0.75 0.7 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="duvar_2">
+      <static>true</static>
+      <pose>0.000 5.000 0.25 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.1 10.100 0.5</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.1 10.100 0.5</size></box></geometry>
+          <material><ambient>0.75 0.75 0.7 1</ambient><diffuse>0.75 0.75 0.7 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="duvar_3">
+      <static>true</static>
+      <pose>7.500 7.750 0.25 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.1 4.600 0.5</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.1 4.600 0.5</size></box></geometry>
+          <material><ambient>0.75 0.75 0.7 1</ambient><diffuse>0.75 0.75 0.7 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="duvar_4">
+      <static>true</static>
+      <pose>7.500 1.250 0.25 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.1 2.600 0.5</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.1 2.600 0.5</size></box></geometry>
+          <material><ambient>0.75 0.75 0.7 1</ambient><diffuse>0.75 0.75 0.7 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="duvar_5">
+      <static>true</static>
+      <pose>13.500 0.000 0.25 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>9.100 0.1 0.5</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>9.100 0.1 0.5</size></box></geometry>
+          <material><ambient>0.75 0.75 0.7 1</ambient><diffuse>0.75 0.75 0.7 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="duvar_6">
+      <static>true</static>
+      <pose>13.500 10.000 0.25 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>9.100 0.1 0.5</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>9.100 0.1 0.5</size></box></geometry>
+          <material><ambient>0.75 0.75 0.7 1</ambient><diffuse>0.75 0.75 0.7 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="duvar_7">
+      <static>true</static>
+      <pose>18.000 5.000 0.25 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.1 10.100 0.5</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.1 10.100 0.5</size></box></geometry>
+          <material><ambient>0.75 0.75 0.7 1</ambient><diffuse>0.75 0.75 0.7 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="duvar_8">
+      <static>true</static>
+      <pose>9.000 7.750 0.25 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.1 4.600 0.5</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.1 4.600 0.5</size></box></geometry>
+          <material><ambient>0.75 0.75 0.7 1</ambient><diffuse>0.75 0.75 0.7 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="duvar_9">
+      <static>true</static>
+      <pose>9.000 1.250 0.25 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.1 2.600 0.5</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.1 2.600 0.5</size></box></geometry>
+          <material><ambient>0.75 0.75 0.7 1</ambient><diffuse>0.75 0.75 0.7 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="duvar_10">
+      <static>true</static>
+      <pose>8.250 2.500 0.25 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>1.600 0.1 0.5</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>1.600 0.1 0.5</size></box></geometry>
+          <material><ambient>0.75 0.75 0.7 1</ambient><diffuse>0.75 0.75 0.7 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="duvar_11">
+      <static>true</static>
+      <pose>8.250 5.500 0.25 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>1.600 0.1 0.5</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>1.600 0.1 0.5</size></box></geometry>
+          <material><ambient>0.75 0.75 0.7 1</ambient><diffuse>0.75 0.75 0.7 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="q1_BASLA">
+      <static>true</static>
+      <pose>1.9 4.5 0.001 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>0.25 0.25 0.002</size></box></geometry>
+          <material><ambient>1 1 1 1</ambient><diffuse>1 1 1 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="q2_ALIM1">
+      <static>true</static>
+      <pose>1.9 6.5 0.001 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>0.25 0.25 0.002</size></box></geometry>
+          <material><ambient>1 1 1 1</ambient><diffuse>1 1 1 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="q3_ALIM2">
+      <static>true</static>
+      <pose>3.7 6.5 0.001 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>0.25 0.25 0.002</size></box></geometry>
+          <material><ambient>1 1 1 1</ambient><diffuse>1 1 1 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="q4_ALIM3">
+      <static>true</static>
+      <pose>5.5 6.5 0.001 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>0.25 0.25 0.002</size></box></geometry>
+          <material><ambient>1 1 1 1</ambient><diffuse>1 1 1 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="q5_KAPI1">
+      <static>true</static>
+      <pose>6.6 4.5 0.001 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>0.25 0.25 0.002</size></box></geometry>
+          <material><ambient>1 1 1 1</ambient><diffuse>1 1 1 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="q6_KAPI2">
+      <static>true</static>
+      <pose>10.0 4.5 0.001 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>0.25 0.25 0.002</size></box></geometry>
+          <material><ambient>1 1 1 1</ambient><diffuse>1 1 1 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="q7_BIRAK3">
+      <static>true</static>
+      <pose>11.5 6.5 0.001 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>0.25 0.25 0.002</size></box></geometry>
+          <material><ambient>1 1 1 1</ambient><diffuse>1 1 1 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="q8_BIRAK2">
+      <static>true</static>
+      <pose>14.9 4.5 0.001 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>0.25 0.25 0.002</size></box></geometry>
+          <material><ambient>1 1 1 1</ambient><diffuse>1 1 1 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="q9_BIRAK1">
+      <static>true</static>
+      <pose>11.5 2.9 0.001 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>0.25 0.25 0.002</size></box></geometry>
+          <material><ambient>1 1 1 1</ambient><diffuse>1 1 1 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="alma1">
+      <static>true</static>
+      <pose>1.9 8.6 0.001 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>0.7 0.6 0.002</size></box></geometry>
+          <material><ambient>0.1 0.6 0.1 1</ambient><diffuse>0.1 0.6 0.1 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="alma2">
+      <static>true</static>
+      <pose>3.7 8.6 0.001 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>0.7 0.6 0.002</size></box></geometry>
+          <material><ambient>0.1 0.6 0.1 1</ambient><diffuse>0.1 0.6 0.1 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="alma3">
+      <static>true</static>
+      <pose>5.5 8.6 0.001 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>0.7 0.6 0.002</size></box></geometry>
+          <material><ambient>0.1 0.6 0.1 1</ambient><diffuse>0.1 0.6 0.1 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="birakma3">
+      <static>true</static>
+      <pose>11.5 8.6 0.001 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>0.7 0.6 0.002</size></box></geometry>
+          <material><ambient>0.7 0.1 0.1 1</ambient><diffuse>0.7 0.1 0.1 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="birakma2">
+      <static>true</static>
+      <pose>16.9 4.5 0.001 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>0.7 0.6 0.002</size></box></geometry>
+          <material><ambient>0.7 0.1 0.1 1</ambient><diffuse>0.7 0.1 0.1 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="birakma1">
+      <static>true</static>
+      <pose>11.5 0.9 0.001 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>0.7 0.6 0.002</size></box></geometry>
+          <material><ambient>0.7 0.1 0.1 1</ambient><diffuse>0.7 0.1 0.1 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="baslangic">
+      <static>true</static>
+      <pose>1.9 1.5 0.001 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>0.7 0.6 0.002</size></box></geometry>
+          <material><ambient>0.1 0.3 0.8 1</ambient><diffuse>0.1 0.3 0.8 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+  </world>
+</sdf>

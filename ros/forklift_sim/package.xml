@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>forklift_sim</name>
+  <version>0.1.0</version>
+  <description>Forklift AMR için Gazebo simülasyonu: yarışma sahası ve robot modeli</description>
+  <maintainer email="zumralayvalli-cloud@users.noreply.github.com">zumralayvalli-cloud</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <exec_depend>ros_gz_sim</exec_depend>
+  <exec_depend>ros_gz_bridge</exec_depend>
+  <exec_depend>teleop_twist_keyboard</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
