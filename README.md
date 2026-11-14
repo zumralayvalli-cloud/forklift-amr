@@ -88,6 +88,19 @@ Robotu klavyeyle sürmek için ikinci bir terminalde:
 ros2 run teleop_twist_keyboard teleop_twist_keyboard
 ```
 
+Haritalama (simülasyon yerine bunu başlatın; sahayı, robotu, haritalamayı ve RViz'i birlikte açar):
+
+```bash
+sudo apt install -y ros-jazzy-slam-toolbox ros-jazzy-nav2-map-server
+ros2 launch forklift_sim harita.launch.py
+```
+
+Robotu klavyeyle sahada gezdirin; RViz penceresinde harita oluşur. Bitince kaydedin:
+
+```bash
+ros2 run nav2_map_server map_saver_cli -f ~/saha_haritasi
+```
+
 Saha ölçülerini değiştirmek için `ros/forklift_sim/scripts/saha_uret.py` dosyasının
 başındaki sayıları düzenleyip betiği yeniden çalıştırın.
 

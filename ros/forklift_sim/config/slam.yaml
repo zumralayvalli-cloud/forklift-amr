@@ -1,0 +1,31 @@
+# slam_toolbox ayarları (haritalama modu)
+slam_toolbox:
+  ros__parameters:
+    use_sim_time: true
+
+    # çerçeveler ve konular
+    odom_frame: odom
+    map_frame: map
+    base_frame: base_link
+    scan_topic: /scan
+    mode: mapping
+
+    # harita
+    resolution: 0.05            # 5 cm'lik hücreler
+    map_update_interval: 2.0    # harita 2 saniyede bir güncellenir
+    min_laser_range: 0.15
+    max_laser_range: 12.0
+
+    # ne kadar hareketten sonra yeni tarama eklensin
+    minimum_travel_distance: 0.2
+    minimum_travel_heading: 0.2
+    minimum_time_interval: 0.5
+
+    transform_publish_period: 0.02
+    transform_timeout: 0.5
+    tf_buffer_duration: 30.0
+    throttle_scans: 1
+    use_scan_matching: true
+    use_scan_barycenter: true
+    do_loop_closing: true
+    debug_logging: false
