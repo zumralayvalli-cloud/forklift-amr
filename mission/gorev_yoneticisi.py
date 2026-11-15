@@ -1,6 +1,7 @@
 import math
 import time
 from enum import Enum
+from rota_planlayici import shortest_path
 
 
 class Durum(Enum):
@@ -41,7 +42,8 @@ class GorevYoneticisi:
         self.gecen = 0.0
         self.toplam_sure = 0.0
         self.mod = "otomatik"        # robot üzerindeki anahtar: "otomatik" / "manuel"
-        self.gorev = None            # {"alim": 1..3, "birakma": 1..3}
+        self.gorev = None      
+        self.aktif_rota = []     
         self.yuklu = False
         self.baslat_izni = False     # PLC "Göreve başla" (kontrol=2) verdi mi
         self.kapi_sonrasi = None
@@ -102,6 +104,7 @@ class GorevYoneticisi:
             "faz": self.faz,
             "mod": self.mod,
             "gorev": self.gorev,
+            "aktif_rota": self.aktif_rota,
             "yuklu": self.yuklu,
             "beklenen_qr": self.beklenen_qr(),
             "son_qr": self.son_qr,
@@ -134,23 +137,43 @@ class GorevYoneticisi:
         return None
 
     # ---------- dış olaylar ----------
+    
     def gorev_al(self, alim, birakma):
         if self.mod != "otomatik":
             print("Manuel moddayken görev alınamaz")
             return False
+
         if self.durum != Durum.IDLE:
             print(f"Meşgul ({self.durum.name}), görev reddedildi")
             return False
+
         if alim not in ALMA_QR or birakma not in BIRAKMA_QR:
             print(f"Geçersiz nokta: A{alim} -> B{birakma}")
             return False
+
         self.gorev = {"alim": alim, "birakma": birakma}
         self.toplam_sure = 0.0
         self.yuklu = False
         self.baslat_izni = False
+
         print(f"Görev alındı: A{alim} -> B{birakma}")
+
+        # Rota planlama
+        baslangic = f"A{alim}"
+        hedef = f"B{birakma}"
+
+        mesafe, rota = shortest_path(baslangic, hedef)
+        self.aktif_rota = rota
+
+        if rota:
+            print("Hesaplanan rota:", " -> ".join(rota))
+            print("Toplam rota maliyeti:", mesafe)
+        else:
+            print("UYARI: Rota bulunamadı!")
+
         self._gec(Durum.GOREV_ISLENIYOR)
         return True
+
 
     def plc_rx(self, alim, birakma, kontrol, gonderilen_durum):
         """PLC'den gelen PAKET_RX. gonderilen_durum: bu cevabın ait olduğu PAKET_TX'teki durum kodu."""
@@ -296,5 +319,6 @@ class GorevYoneticisi:
             print("UYARI: 45 dakikalık üst limit aşıldı")
         self.son_biten = (self.gorev["alim"], self.gorev["birakma"])
         self.gorev = None
+        self.aktif_rota = []
         self._gec(Durum.IDLE)
         print()
