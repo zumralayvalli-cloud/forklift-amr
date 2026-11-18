@@ -1,14 +1,21 @@
 """Yarışma sahasını Gazebo'da açar, robotu başlangıç alanına koyar, ROS köprüsünü kurar.
 
 Kullanım:  ros2 launch forklift_sim sim.launch.py
+
+Gazebo iki ayrı süreç olarak açılır:
+  - sunucu (fizik + sensörler): yazılımsal çizimle. Sanal makinede LiDAR ekran kartıyla
+    çalışınca, özellikle RViz de açıkken, bozuk ölçüm (hep 0,15-1,0 m) üretiyordu.
+  - pencere (GUI): ekran kartıyla, akıcı görüntü için.
+Sorun çıkarsa sunucuyu da ekran kartıyla açmak için:
+    ros2 launch forklift_sim sim.launch.py lidar_yazilimsal:=false
 """
 
 import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
-from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.actions import DeclareLaunchArgument, ExecuteProcess, OpaqueFunction
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 # Robotun doğduğu yer; scripts/saha_uret.py içindeki BASLANGIC ile aynı olmalı.
@@ -16,24 +23,33 @@ BASLANGIC_X, BASLANGIC_Y = "1.9", "1.5"
 BASLANGIC_YON = "1.5708"   # +y yönüne (q1'e doğru) bakar
 
 
-def generate_launch_description():
+def _gazebo(context):
     paket = get_package_share_directory("forklift_sim")
     dunya = os.path.join(paket, "worlds", "saha.sdf")
+    yazilimsal = LaunchConfiguration("lidar_yazilimsal").perform(context).lower() in ("1", "true", "evet")
+
+    # Varsayılan çizim motoru (ogre2) sanal makinede çöküyor; her ikisi de ogre ile açılır.
+    sunucu = ExecuteProcess(
+        cmd=["gz", "sim", "-s", "-r", "--render-engine-server", "ogre", dunya],
+        additional_env={"LIBGL_ALWAYS_SOFTWARE": "1"} if yazilimsal else {},
+        output="screen",
+    )
+    pencere = ExecuteProcess(
+        cmd=["gz", "sim", "-g", "--render-engine-gui", "ogre"],
+        output="screen",
+    )
+    return [sunucu, pencere]
+
+
+def generate_launch_description():
+    paket = get_package_share_directory("forklift_sim")
     robot = os.path.join(paket, "models", "forklift", "model.sdf")
     kopru_ayari = os.path.join(paket, "config", "kopru.yaml")
-
-    # Sanal makinede varsayılan çizim motoru (ogre2) çöküyor; ogre ile açılır.
-    gazebo = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(get_package_share_directory("ros_gz_sim"), "launch", "gz_sim.launch.py")
-        ),
-        launch_arguments={"gz_args": f"-r {dunya} --render-engine ogre"}.items(),
-    )
 
     robot_ekle = Node(
         package="ros_gz_sim",
         executable="create",
-        arguments=["-file", robot, "-name", "forklift",
+        arguments=["-world", "saha", "-file", robot, "-name", "forklift",
                    "-x", BASLANGIC_X, "-y", BASLANGIC_Y, "-z", "0.02", "-Y", BASLANGIC_YON],
         output="screen",
     )
@@ -45,4 +61,10 @@ def generate_launch_description():
         output="screen",
     )
 
-    return LaunchDescription([gazebo, robot_ekle, kopru])
+    return LaunchDescription([
+        DeclareLaunchArgument("lidar_yazilimsal", default_value="true",
+                              description="Gazebo sunucusunu (LiDAR) yazılımsal çizimle çalıştır"),
+        OpaqueFunction(function=_gazebo),
+        robot_ekle,
+        kopru,
+    ])
