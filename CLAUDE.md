@@ -47,8 +47,8 @@ Arayüzde eksik her bilgi −4. Anahtar otomatikteyken uzaktan kontrol yapılama
 - Geliştirme makinesi M4 Mac (16 GB). ROS ve Gazebo, UTM içindeki Ubuntu sanal
   makinesinde (`forklift-ros`, 8 GB bellek, 6 çekirdek, 64 GB disk) çalışır.
 - Sanal makinede Gazebo'nun varsayılan çizim motoru (ogre2) çöküyor; her zaman
-  `--render-engine ogre` ile açılır. `sim.launch.py` ve dünyadaki Sensors eklentisi
-  bunu zaten yapıyor. Yazılımsal çizim (`LIBGL_ALWAYS_SOFTWARE=1`) yedek seçenek.
+  ogre ile açılır. `sim.launch.py` Gazebo sunucusunu (`gz sim -s`, yazılımsal çizim)
+  ve penceresini (`gz sim -g`, ekran kartı) ayrı süreçler olarak başlatır.
 - ROS paketleri `ros/` altında durur. Repo, sanal makinede `~/ros2_ws/src/forklift-amr`
   olarak klonlanır ve `~/ros2_ws` içinde `colcon build` ile derlenir.
 - Saha ölçüleri tek yerde: `ros/forklift_sim/scripts/saha_uret.py`. `worlds/saha.sdf`
@@ -71,16 +71,16 @@ Ubuntu 24.04.3 ARM masaüstü ISO'su çekirdeği internetten indirir; internetsi
 
 ## Açık sorun (ilk iş bu)
 
-Sanal makinede kaydedilen harita sahaya benzemiyor: robotun çevresinde yaklaşık 1 m
-yarıçaplı bir halka ve dar bir şerit çıkıyor. Şüphe: Gazebo'daki `gpu_lidar` sensörü
-ogre + sanal ekran kartı sürücüsüyle bozuk veri üretiyor. Henüz doğrulanmadı.
-Sıradaki adım: simülasyon açıkken ve robot başlangıçta dururken
-`python3 ~/ros2_ws/src/forklift-amr/ros/forklift_sim/scripts/lidar_kontrol.py`
-çıktısına bakmak (dört yöndeki ölçüm + yukarıdan kaba çizim). Beklenen (LiDAR gövdenin
-25 cm önünde): önde 8,20 m, solda 1,85 m, arkada 1,70 m, sağda 5,55 m.
-Veri bozuksa Gazebo sunucusunu yazılımsal çizimle (`LIBGL_ALWAYS_SOFTWARE=1`, ogre2)
-çalıştırmayı denemek. Ayrıca RViz harita ve LiDAR noktalarını göstermiyordu; RViz'i
-yazılımsal çizimle açan düzeltme gönderildi, işe yaradığı henüz görülmedi.
+Haritalama sırasında LiDAR bozuk veri üretiyor. `lidar_kontrol.py` ile görülen:
+`sim.launch.py` tek başınayken ölçümler doğru; `harita.launch.py` açıkken (slam + RViz)
+bütün ölçümler 0,15-1,0 m arasında, yani robotun çevresinde 1 m'lik hayali halka.
+Şüphe: `gpu_lidar` ekran kartını RViz ile paylaşınca sanal sürücüde bozuluyor.
+Uygulanan düzeltme: `sim.launch.py` Gazebo'yu iki süreç olarak açıyor; sunucu
+(sensörler) `LIBGL_ALWAYS_SOFTWARE=1` ile, pencere ekran kartıyla. Geri almak için
+`lidar_yazilimsal:=false`. Henüz sanal makinede doğrulanmadı.
+Doğrulama: `harita.launch.py` açıkken `lidar_kontrol.py`; beklenen önde 8,20 m,
+solda 1,85 m, arkada 1,70 m, sağda 5,55 m. RViz hâlâ boş görünüyor (ayrı sorun).
+Gazebo Harmonic'te CPU tabanlı LiDAR yok (gz-sim 10'la geliyor), o yol kapalı.
 
 ## Kodun durumu
 
