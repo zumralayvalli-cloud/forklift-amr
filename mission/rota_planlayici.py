@@ -15,6 +15,11 @@ graph = {
 
 
 def shortest_path(start, goal):
+    # Grafikte olmayan bir nokta istenirse (ör. henüz eklenmemiş A3, B2, B3)
+    # program çökmesin; "rota yok" dönsün.
+    if start not in graph or goal not in graph:
+        return None, []
+
     queue = [(0, start, [start])]
     visited = set()
 

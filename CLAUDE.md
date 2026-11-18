@@ -74,8 +74,10 @@ Ubuntu 24.04.3 ARM masaüstü ISO'su çekirdeği internetten indirir; internetsi
 Sanal makinede kaydedilen harita sahaya benzemiyor: robotun çevresinde yaklaşık 1 m
 yarıçaplı bir halka ve dar bir şerit çıkıyor. Şüphe: Gazebo'daki `gpu_lidar` sensörü
 ogre + sanal ekran kartı sürücüsüyle bozuk veri üretiyor. Henüz doğrulanmadı.
-Sıradaki adım: robot başlangıçta dururken `ros2 topic echo /scan --once --field ranges`
-çıktısına bakmak. Beklenen: solda 1,9 m, arkada 1,5 m, sağda 5,6 m, önde 8,5 m.
+Sıradaki adım: simülasyon açıkken ve robot başlangıçta dururken
+`python3 ~/ros2_ws/src/forklift-amr/ros/forklift_sim/scripts/lidar_kontrol.py`
+çıktısına bakmak (dört yöndeki ölçüm + yukarıdan kaba çizim). Beklenen (LiDAR gövdenin
+25 cm önünde): önde 8,20 m, solda 1,85 m, arkada 1,70 m, sağda 5,55 m.
 Veri bozuksa Gazebo sunucusunu yazılımsal çizimle (`LIBGL_ALWAYS_SOFTWARE=1`, ogre2)
 çalıştırmayı denemek. Ayrıca RViz harita ve LiDAR noktalarını göstermiyordu; RViz'i
 yazılımsal çizimle açan düzeltme gönderildi, işe yaradığı henüz görülmedi.
@@ -92,7 +94,7 @@ yazılımsal çizimle açan düzeltme gönderildi, işe yaradığı henüz gör�
 | Simülasyon (`ros/forklift_sim`) | Saha, yer işaretleri, diferansiyel sürüşlü robot ve LiDAR sanal makinede çalışıyor; klavyeyle sürüş denendi. Kapı, şerit, QR görselleri, kamera, çatal yok |
 | Sürüş, odometri, konum | Simülasyonda `/cmd_vel`, `/odom`, `/scan` var; PLC paketine bağlı değil (konum 0,00 gidiyor) |
 | Haritalama | `harita.launch.py` çalışıyor ve harita kaydediliyor, ama **harita yanlış çıkıyor** (aşağıdaki açık soruna bakın) |
-| Rota planlama | Yok |
+| Rota planlama | `mission/rota_planlayici.py`: takım arkadaşı (Şevval) Dijkstra ile ekledi; nokta grafiği ve mesafeler örnek değerler, A3/B2/B3 henüz yok. Görev alınınca rota hesaplanıp arayüz durumuna (`aktif_rota`) yazılıyor, harekete bağlı değil |
 | Engelde durma | Yok |
 | Kaldırma, acil stop, mod anahtarı donanımı | Yok (mod yalnızca geliştirme panelinden değişiyor) |
 
