@@ -101,8 +101,19 @@ Robotu klavyeyle sahada gezdirin; RViz penceresinde harita oluşur. Bitince kayd
 ros2 run nav2_map_server map_saver_cli -f ~/saha_haritasi
 ```
 
+Otonom sürüş (Nav2):
+
+```bash
+sudo apt install -y ros-jazzy-navigation2
+ros2 launch forklift_sim nav.launch.py
+```
+
+RViz'de üstteki **2D Goal Pose** düğmesine basın, haritada gitmek istediğiniz yere tıklayın
+ve fareyi bırakmadan robotun bakacağı yöne sürükleyin. Robot yolu kendisi planlayıp gider.
+
 Saha ölçülerini değiştirmek için `ros/forklift_sim/scripts/saha_uret.py` dosyasının
-başındaki sayıları düzenleyip betiği yeniden çalıştırın.
+başındaki sayıları düzenleyip betiği yeniden çalıştırın; hem Gazebo dünyası hem navigasyon
+haritası yeniden üretilir.
 
 ## Durum
 

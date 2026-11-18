@@ -53,6 +53,18 @@ Arayüzde eksik her bilgi −4. Anahtar otomatikteyken uzaktan kontrol yapılama
   olarak klonlanır ve `~/ros2_ws` içinde `colcon build` ile derlenir.
 - Saha ölçüleri tek yerde: `ros/forklift_sim/scripts/saha_uret.py`. `worlds/saha.sdf`
   bu betikle üretilir, elle düzenlenmez. Koordinat orijini sahanın sol alt köşesi.
+- Robot modelinde `base_link` iki tahrik tekerinin ortasında (robot bu noktanın
+  etrafında döner); gövde 0,2 m arkaya, 0,6 m öne uzanır, LiDAR 0,45 m önde. Nav2'deki
+  footprint ve `sim.launch.py`'deki LiDAR TF'i buna göre.
+- Navigasyon haritası (`ros/forklift_sim/maps/saha.pgm/.yaml`) `saha_uret.py` ile duvar
+  ölçülerinden üretilir; koordinatları saha koordinatlarıyla aynı. LiDAR'la çıkarılan
+  harita yalnızca haritalamanın çalıştığını göstermek için; yarışmada gerçek harita
+  LiDAR ile çıkarılıp başlangıç noktası tanıtılacak.
+- Nav2 kendi başlatma dosyamızla (`nav.launch.py`) kuruluyor, `nav2_bringup` kullanılmıyor:
+  map_server, amcl, planner (NavFn, A*), controller (Regulated Pure Pursuit; MPPI sanal
+  makinede ağır), behavior_server, bt_navigator. Duruş toleransı ±7 cm / ±0,08 rad.
+  Şartname engelde durmayı, kaçınmayı değil istiyor; Nav2'nin yeniden planlaması ileride
+  bu kurala göre sınırlanmalı.
 - Simülasyondaki LiDAR bilerek 355° tarar (±3,1 rad, 356 ölçüm): slam_toolbox tam tur
   taramalarda beklenen ölçüm sayısını yanlış hesaplayıp taramaları reddedebiliyor.
 - Mevcut `mission/` kodu düz Python olarak kalır ve Mac'te doğrudan çalışır; ileride
@@ -92,6 +104,7 @@ Teşhis aracı: `ros/forklift_sim/scripts/lidar_kontrol.py`.
 | Simülasyon (`ros/forklift_sim`) | Saha, yer işaretleri, diferansiyel sürüşlü robot ve LiDAR sanal makinede çalışıyor; klavyeyle sürüş denendi. Kapı, şerit, QR görselleri, kamera, çatal yok |
 | Sürüş, odometri, konum | Simülasyonda `/cmd_vel`, `/odom`, `/scan` var; PLC paketine bağlı değil (konum 0,00 gidiyor) |
 | Haritalama | Simülasyonda çalışıyor: klavyeyle gezdirilerek iki oda ve geçit doğru haritalandı, `~/saha_haritasi.pgm/.yaml` olarak sanal makinede kayıtlı (repoda değil) |
+| Otonom sürüş (Nav2) | `nav.launch.py` + `config/nav2.yaml` yazıldı; RViz'den hedef verilerek denenecek, sanal makinede henüz çalıştırılmadı |
 | Rota planlama | `mission/rota_planlayici.py`: takım arkadaşı (Şevval) Dijkstra ile ekledi; nokta grafiği ve mesafeler örnek değerler, A3/B2/B3 henüz yok. Görev alınınca rota hesaplanıp arayüz durumuna (`aktif_rota`) yazılıyor, harekete bağlı değil |
 | Engelde durma | Yok |
 | Kaldırma, acil stop, mod anahtarı donanımı | Yok (mod yalnızca geliştirme panelinden değişiyor) |
@@ -103,7 +116,10 @@ Teşhis aracı: `ros/forklift_sim/scripts/lidar_kontrol.py`.
    QR görselleri ve kamera daha sonra eklenecek.
 3. Sürüş ve odometri; konumu PLC paketine bağlamak.
 4. ~~Haritalama (slam_toolbox) ve haritayı kaydetme.~~ Simülasyonda tamamlandı.
-5. Arayüzde rota tanımlama, en kısa yol hesabı, yol takibi.
+5. Arayüzde rota tanımlama, en kısa yol hesabı, yol takibi. Sıra: (a) Nav2 ile RViz'den
+   hedefe gitme, (b) durak koordinatlarını tek dosyada toplama, Şevval'in grafiğini
+   tamamlama, (c) görev yöneticisini durakları Nav2'ye gönderecek şekilde bağlama ve
+   gerçek konumu PLC paketine yazma.
 6. Durum makinesindeki zamanlayıcıları gerçek olaylarla değiştirmek.
 7. Çizgi takibini sürüşe bağlamak, QR konumu (solvePnP), yük alma yanaşması.
 8. Engelde durma.
@@ -125,7 +141,11 @@ ros2 launch forklift_sim sim.launch.py                      # saha + robot
 ros2 run teleop_twist_keyboard teleop_twist_keyboard        # ayrı terminalde klavyeyle sürüş
 ros2 launch forklift_sim harita.launch.py                   # saha + robot + haritalama + RViz
 ros2 run nav2_map_server map_saver_cli -f ~/saha_haritasi   # haritayı kaydet
+ros2 launch forklift_sim nav.launch.py                      # saha + robot + Nav2 + RViz (2D Goal Pose ile hedef)
+python3 ros/forklift_sim/scripts/saha_uret.py               # saha ölçüsü değişince dünya ve haritayı yeniden üret
 ```
+
+Nav2 kurulumu: `sudo apt install -y ros-jazzy-navigation2`.
 
 Klavyeyle sürüşte Türkçe Q klavyede ileri tuşu noktalı `i` (Ş'nin sağında); noktasız `ı`
 robotu durdurur. Harita çerçevesinin orijini robotun başladığı yerdir ve robotun ilk

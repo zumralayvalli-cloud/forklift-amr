@@ -54,6 +54,15 @@ def generate_launch_description():
         output="screen",
     )
 
+    # LiDAR'ın gövdeye göre yeri; models/forklift/model.sdf içindeki sensör pozu ile aynı olmalı.
+    lidar_tf = Node(
+        package="tf2_ros",
+        executable="static_transform_publisher",
+        arguments=["--x", "0.45", "--y", "0", "--z", "0.27",
+                   "--frame-id", "base_link", "--child-frame-id", "lidar_link"],
+        parameters=[{"use_sim_time": True}],
+    )
+
     kopru = Node(
         package="ros_gz_bridge",
         executable="parameter_bridge",
@@ -66,5 +75,6 @@ def generate_launch_description():
                               description="Gazebo sunucusunu (LiDAR) yazılımsal çizimle çalıştır"),
         OpaqueFunction(function=_gazebo),
         robot_ekle,
+        lidar_tf,
         kopru,
     ])

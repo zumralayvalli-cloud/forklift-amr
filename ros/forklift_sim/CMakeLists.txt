@@ -3,7 +3,7 @@ project(forklift_sim)
 
 find_package(ament_cmake REQUIRED)
 
-install(DIRECTORY launch worlds models config rviz
+install(DIRECTORY launch worlds models config rviz maps
   DESTINATION share/${PROJECT_NAME}
 )
 

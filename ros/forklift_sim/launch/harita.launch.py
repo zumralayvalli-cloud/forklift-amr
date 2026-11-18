@@ -24,14 +24,6 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(os.path.join(paket, "launch", "sim.launch.py"))
     )
 
-    # LiDAR'ın gövdeye göre yeri; models/forklift/model.sdf içindeki sensör pozu ile aynı olmalı.
-    lidar_tf = Node(
-        package="tf2_ros",
-        executable="static_transform_publisher",
-        arguments=["--x", "0.25", "--y", "0", "--z", "0.27",
-                   "--frame-id", "base_link", "--child-frame-id", "lidar_link"],
-        parameters=[{"use_sim_time": True}],
-    )
 
     slam = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -55,4 +47,4 @@ def generate_launch_description():
         output="log",
     )
 
-    return LaunchDescription([simulasyon, lidar_tf, slam, rviz])
+    return LaunchDescription([simulasyon, slam, rviz])
