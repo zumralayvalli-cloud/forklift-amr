@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
-"""Yarışma sahasının Gazebo dünyasını (worlds/saha.sdf) üretir.
+"""Yarışma sahasının Gazebo dünyasını (worlds/saha.sdf) ve navigasyon haritasını
+(maps/saha.pgm + maps/saha.yaml) üretir.
 
 Çalıştırma:  python3 ros/forklift_sim/scripts/saha_uret.py
+
+Navigasyon haritası duvar ölçülerinden doğrudan çizilir; koordinatları saha
+koordinatlarıyla aynıdır (orijin sol alt köşe). Yarışmada harita LiDAR ile çıkarılacak.
 
 Ölçüler Ek Teknik Şartname Şekil 1'den alınmıştır. Şekilde açıkça yazan ölçüler
 (18 m, 10 m, 9 m, 7,5 m, 4,5 m, 2,5 m, 5,5 m) kesindir; istasyon ve QR konumları
@@ -145,8 +149,52 @@ def dunya():
 """
 
 
+# ---------------- navigasyon haritası ----------------
+HARITA_COZUNURLUK = 0.05   # m / hücre
+HARITA_PAY = 0.5           # sahanın çevresine bırakılan boşluk (m)
+
+
+def harita():
+    """Duvarları dolu (siyah), geri kalanı boş (beyaz) olan PGM resmi ve YAML üretir."""
+    cozunurluk = HARITA_COZUNURLUK
+    ox, oy = -HARITA_PAY, -HARITA_PAY
+    gen = int(round((SAHA_X + 2 * HARITA_PAY) / cozunurluk))
+    yuk = int(round((SAHA_Y + 2 * HARITA_PAY) / cozunurluk))
+    yari = DUVAR_KALINLIK / 2
+    kutular = [(min(x1, x2) - yari, min(y1, y2) - yari, max(x1, x2) + yari, max(y1, y2) + yari)
+               for x1, y1, x2, y2 in DUVARLAR]
+    pikseller = bytearray()
+    for satir in range(yuk):                       # resmin ilk satırı haritanın en üstü
+        y = oy + (yuk - 1 - satir + 0.5) * cozunurluk
+        for sutun in range(gen):
+            x = ox + (sutun + 0.5) * cozunurluk
+            dolu = any(a <= x <= c and b <= y <= d for a, b, c, d in kutular)
+            pikseller.append(0 if dolu else 254)
+    pgm = f"P5\n{gen} {yuk}\n255\n".encode() + bytes(pikseller)
+    yaml = (
+        "# Bu dosya scripts/saha_uret.py tarafından üretilir; elle düzenlemeyin.\n"
+        "image: saha.pgm\n"
+        "mode: trinary\n"
+        f"resolution: {cozunurluk}\n"
+        f"origin: [{ox}, {oy}, 0.0]\n"
+        "negate: 0\n"
+        "occupied_thresh: 0.65\n"
+        "free_thresh: 0.25\n"
+    )
+    return pgm, yaml
+
+
 if __name__ == "__main__":
-    hedef = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "worlds", "saha.sdf")
+    kok = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+    hedef = os.path.join(kok, "worlds", "saha.sdf")
     with open(hedef, "w", encoding="utf-8") as f:
         f.write(dunya())
     print("Yazıldı:", os.path.normpath(hedef))
+
+    os.makedirs(os.path.join(kok, "maps"), exist_ok=True)
+    pgm, yaml = harita()
+    with open(os.path.join(kok, "maps", "saha.pgm"), "wb") as f:
+        f.write(pgm)
+    with open(os.path.join(kok, "maps", "saha.yaml"), "w", encoding="utf-8") as f:
+        f.write(yaml)
+    print("Yazıldı:", os.path.normpath(os.path.join(kok, "maps", "saha.pgm/.yaml")))

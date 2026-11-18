@@ -12,10 +12,10 @@ Kullanım (simülasyon açıkken, robot başlangıç yerinde dururken):
 
 import math
 
-BEKLENEN = {          # robot başlangıçta (1,9 ; 1,5), +y'ye bakarken; LiDAR gövdenin 25 cm önünde
-    "ön": 8.2,
+BEKLENEN = {          # robot başlangıçta (1,9 ; 1,5), +y'ye bakarken; LiDAR tekerlek ekseninin 45 cm önünde
+    "ön": 8.0,
     "sol": 1.85,
-    "arka": 1.7,
+    "arka": 1.9,
     "sağ": 5.55,
 }
 YONLER = {"ön": 0.0, "sol": math.pi / 2, "arka": math.pi, "sağ": -math.pi / 2}
