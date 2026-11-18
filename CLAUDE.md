@@ -78,9 +78,12 @@ Arayüzde eksik her bilgi −4. Anahtar otomatikteyken uzaktan kontrol yapılama
 Proje sahibinin kullandığı ağlardan biri şifresiz (http) apt isteklerini 403 ile
 reddediyor; https sorunsuz. Ubuntu'da paket kaynakları https olmalı:
 `sudo sed -i 's|http://ports|https://ports|' /etc/apt/sources.list.d/ubuntu.sources`
-ROS deposu da https olmalı; aksi halde ROS paketleri (ör. Nav2) 403 ile inmiyor:
-`sudo sed -i 's|http://packages.ros.org|https://packages.ros.org|g' /etc/apt/sources.list.d/ros2*`
-(ros2-apt-source paketi güncellenirse dosya http'ye dönebilir; 403 görülürse tekrar çalıştır.)
+ROS deposu da https olmalı, ama `packages.ros.org` https sertifikası geçersiz (ad
+uyuşmuyor). Çalışan çözüm, aynı paketleri sunan OSUOSL adresi (doğrulandı, Nav2 kuruldu):
+`/etc/apt/sources.list.d/ros2.sources` içinde
+`URIs: https://ftp.osuosl.org/pub/ros/packages.ros.org/ros2/ubuntu`
+(ros2-apt-source paketi güncellenirse dosya eski haline dönebilir; 403 ya da sertifika
+hatası görülürse adresi tekrar değiştir.)
 Bu ağ ping'i de engelliyor.
 Ubuntu 24.04.3 ARM masaüstü ISO'su çekirdeği internetten indirir; internetsiz kurulmaz.
 
@@ -107,7 +110,7 @@ Teşhis aracı: `ros/forklift_sim/scripts/lidar_kontrol.py`.
 | Simülasyon (`ros/forklift_sim`) | Saha, yer işaretleri, diferansiyel sürüşlü robot ve LiDAR sanal makinede çalışıyor; klavyeyle sürüş denendi. Kapı, şerit, QR görselleri, kamera, çatal yok |
 | Sürüş, odometri, konum | Simülasyonda `/cmd_vel`, `/odom`, `/scan` var; PLC paketine bağlı değil (konum 0,00 gidiyor) |
 | Haritalama | Simülasyonda çalışıyor: klavyeyle gezdirilerek iki oda ve geçit doğru haritalandı, `~/saha_haritasi.pgm/.yaml` olarak sanal makinede kayıtlı (repoda değil) |
-| Otonom sürüş (Nav2) | `nav.launch.py` + `config/nav2.yaml` yazıldı. İlk denemede Nav2 kurulamamıştı (ROS deposu http, ağ 403); https'e çevrilip yeniden kurulacak, sonra RViz'den hedef verilerek denenecek |
+| Otonom sürüş (Nav2) | `nav.launch.py` + `config/nav2.yaml` yazıldı. Nav2 kuruldu (OSUOSL adresiyle); RViz'den hedef verilerek denenecek |
 | Rota planlama | `mission/rota_planlayici.py`: takım arkadaşı (Şevval) Dijkstra ile ekledi; nokta grafiği ve mesafeler örnek değerler, A3/B2/B3 henüz yok. Görev alınınca rota hesaplanıp arayüz durumuna (`aktif_rota`) yazılıyor, harekete bağlı değil |
 | Engelde durma | Yok |
 | Kaldırma, acil stop, mod anahtarı donanımı | Yok (mod yalnızca geliştirme panelinden değişiyor) |
