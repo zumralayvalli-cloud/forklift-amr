@@ -55,7 +55,11 @@ def generate_launch_description():
         package="nav2_lifecycle_manager",
         executable="lifecycle_manager",
         name="lifecycle_manager_navigation",
-        parameters=[{"use_sim_time": True, "autostart": True,
+        # bond_timeout: yönetici her düğümü başlattıktan sonra onunla "bağ" kurmayı bu
+        # sürenin yarısı kadar bekler; kuramazsa geri kalanları başlatmayı bırakır.
+        # Varsayılan 4 sn sanal makinede yetmiyordu (planner, controller, behavior ve
+        # bt_navigator "inactive" kalıyordu); 20 sn verildi.
+        parameters=[{"use_sim_time": True, "autostart": True, "bond_timeout": 20.0,
                      "node_names": [ad for _, ad in DUGUMLER]}],
         output="screen",
     )

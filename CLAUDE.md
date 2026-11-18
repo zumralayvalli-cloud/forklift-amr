@@ -110,7 +110,7 @@ Teşhis aracı: `ros/forklift_sim/scripts/lidar_kontrol.py`.
 | Simülasyon (`ros/forklift_sim`) | Saha, yer işaretleri, diferansiyel sürüşlü robot ve LiDAR sanal makinede çalışıyor; klavyeyle sürüş denendi. Kapı, şerit, QR görselleri, kamera, çatal yok |
 | Sürüş, odometri, konum | Simülasyonda `/cmd_vel`, `/odom`, `/scan` var; PLC paketine bağlı değil (konum 0,00 gidiyor) |
 | Haritalama | Simülasyonda çalışıyor: klavyeyle gezdirilerek iki oda ve geçit doğru haritalandı, `~/saha_haritasi.pgm/.yaml` olarak sanal makinede kayıtlı (repoda değil) |
-| Otonom sürüş (Nav2) | `nav.launch.py` + `config/nav2.yaml` yazıldı. Nav2 kuruldu (OSUOSL adresiyle); RViz'den hedef verilerek denenecek |
+| Otonom sürüş (Nav2) | `nav.launch.py` + `config/nav2.yaml` yazıldı, Nav2 kuruldu. İlk açılışta map_server ve amcl aktif oldu (harita ve konum doğru) ama planner/controller/behavior/bt_navigator `inactive` kaldı; elle `ros2 lifecycle set ... activate` ile açıldı. Şüphe: yöneticinin bond süresi (4 sn) sanal makinede yetmiyor; `bond_timeout: 20.0` verildi, doğrulanacak. RViz'den hedefe gitme henüz denenmedi |
 | Rota planlama | `mission/rota_planlayici.py`: takım arkadaşı (Şevval) Dijkstra ile ekledi; nokta grafiği ve mesafeler örnek değerler, A3/B2/B3 henüz yok. Görev alınınca rota hesaplanıp arayüz durumuna (`aktif_rota`) yazılıyor, harekete bağlı değil |
 | Engelde durma | Yok |
 | Kaldırma, acil stop, mod anahtarı donanımı | Yok (mod yalnızca geliştirme panelinden değişiyor) |
