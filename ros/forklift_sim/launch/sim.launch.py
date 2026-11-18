@@ -14,7 +14,9 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, ExecuteProcess, OpaqueFunction
+from launch.actions import (DeclareLaunchArgument, ExecuteProcess, OpaqueFunction,
+                            RegisterEventHandler)
+from launch.event_handlers import OnShutdown
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
@@ -70,7 +72,15 @@ def generate_launch_description():
         output="screen",
     )
 
+    # Control + C ile kapatınca Gazebo sunucusu bazen arkada çalışmaya devam ediyordu;
+    # sonraki açılışta iki sunucu ve 40 dakikalık simülasyon saati çakışıyordu.
+    # Kapanışta kalan Gazebo süreçlerini de sonlandır.
+    gazebo_temizle = RegisterEventHandler(OnShutdown(on_shutdown=[
+        ExecuteProcess(cmd=["pkill", "-f", "gz sim"], output="log"),
+    ]))
+
     return LaunchDescription([
+        gazebo_temizle,
         DeclareLaunchArgument("lidar_yazilimsal", default_value="true",
                               description="Gazebo sunucusunu (LiDAR) yazılımsal çizimle çalıştır"),
         OpaqueFunction(function=_gazebo),
