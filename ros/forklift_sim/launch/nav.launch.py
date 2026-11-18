@@ -13,20 +13,26 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
-# Sırayla başlatılıp yönetilecek Nav2 düğümleri
-DUGUMLER = [
+# Nav2 düğümleri iki grupta başlatılır (nav2_bringup da böyle yapar):
+# önce harita + konum bulma, birkaç saniye sonra yol planlama ve izleme.
+# Planlayıcının maliyet haritası açılırken "map -> base_link" dönüşümünü bekliyor;
+# amcl'den hemen sonra açılınca bu dönüşüm henüz yoktu ve açılış başarısız oluyordu.
+KONUM_DUGUMLERI = [
     ("nav2_map_server", "map_server"),
     ("nav2_amcl", "amcl"),
+]
+NAVIGASYON_DUGUMLERI = [
     ("nav2_planner", "planner_server"),
     ("nav2_controller", "controller_server"),
     ("nav2_behaviors", "behavior_server"),
     ("nav2_bt_navigator", "bt_navigator"),
 ]
+NAVIGASYON_GECIKMESI = 8.0   # saniye; konum bulma hazır olsun diye
 
 
 def generate_launch_description():
@@ -39,7 +45,7 @@ def generate_launch_description():
     )
 
     dugumler = []
-    for paket_adi, ad in DUGUMLER:
+    for paket_adi, ad in KONUM_DUGUMLERI + NAVIGASYON_DUGUMLERI:
         parametreler = [ayarlar, {"use_sim_time": True}]
         if ad == "map_server":
             parametreler.append({"yaml_filename": harita})
@@ -51,17 +57,22 @@ def generate_launch_description():
             output="screen",
         ))
 
-    yonetici = Node(
-        package="nav2_lifecycle_manager",
-        executable="lifecycle_manager",
-        name="lifecycle_manager_navigation",
-        # bond_timeout: yönetici her düğümü başlattıktan sonra onunla "bağ" kurmayı bu
-        # sürenin yarısı kadar bekler; kuramazsa geri kalanları başlatmayı bırakır.
-        # Varsayılan 4 sn sanal makinede yetmiyordu (planner, controller, behavior ve
-        # bt_navigator "inactive" kalıyordu); 20 sn verildi.
-        parameters=[{"use_sim_time": True, "autostart": True, "bond_timeout": 20.0,
-                     "node_names": [ad for _, ad in DUGUMLER]}],
-        output="screen",
+    def yonetici(ad, dugum_listesi):
+        # bond_timeout: yönetici her düğümü başlattıktan sonra onunla bağ kurmayı bekler;
+        # sanal makine yavaş olduğu için varsayılan 4 sn yerine 20 sn.
+        return Node(
+            package="nav2_lifecycle_manager",
+            executable="lifecycle_manager",
+            name=ad,
+            parameters=[{"use_sim_time": True, "autostart": True, "bond_timeout": 20.0,
+                         "node_names": [d for _, d in dugum_listesi]}],
+            output="screen",
+        )
+
+    konum_yoneticisi = yonetici("lifecycle_manager_localization", KONUM_DUGUMLERI)
+    navigasyon_yoneticisi = TimerAction(
+        period=NAVIGASYON_GECIKMESI,
+        actions=[yonetici("lifecycle_manager_navigation", NAVIGASYON_DUGUMLERI)],
     )
 
     rviz = Node(
@@ -79,6 +90,7 @@ def generate_launch_description():
                               description="Kullanılacak harita (.yaml)"),
         simulasyon,
         *dugumler,
-        yonetici,
+        konum_yoneticisi,
+        navigasyon_yoneticisi,
         rviz,
     ])
