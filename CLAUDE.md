@@ -69,18 +69,16 @@ reddediyor; https sorunsuz. Ubuntu'da paket kaynakları https olmalı:
 ROS deposu eklenirken de https adresi kullanılmalı. Bu ağ ping'i de engelliyor.
 Ubuntu 24.04.3 ARM masaüstü ISO'su çekirdeği internetten indirir; internetsiz kurulmaz.
 
-## Açık sorun (ilk iş bu)
+## Çözülen sorun: haritalamada bozuk LiDAR
 
-Haritalama sırasında LiDAR bozuk veri üretiyor. `lidar_kontrol.py` ile görülen:
-`sim.launch.py` tek başınayken ölçümler doğru; `harita.launch.py` açıkken (slam + RViz)
-bütün ölçümler 0,15-1,0 m arasında, yani robotun çevresinde 1 m'lik hayali halka.
-Şüphe: `gpu_lidar` ekran kartını RViz ile paylaşınca sanal sürücüde bozuluyor.
-Uygulanan düzeltme: `sim.launch.py` Gazebo'yu iki süreç olarak açıyor; sunucu
-(sensörler) `LIBGL_ALWAYS_SOFTWARE=1` ile, pencere ekran kartıyla. Geri almak için
-`lidar_yazilimsal:=false`. Henüz sanal makinede doğrulanmadı.
-Doğrulama: `harita.launch.py` açıkken `lidar_kontrol.py`; beklenen önde 8,20 m,
-solda 1,85 m, arkada 1,70 m, sağda 5,55 m. RViz hâlâ boş görünüyor (ayrı sorun).
-Gazebo Harmonic'te CPU tabanlı LiDAR yok (gz-sim 10'la geliyor), o yol kapalı.
+`harita.launch.py` açıkken (slam + RViz) `gpu_lidar` bütün ölçümleri 0,15-1,0 m
+veriyordu; harita robotun çevresinde 1 m'lik halka olarak çıkıyordu. Neden: LiDAR ve
+RViz sanal ekran kartını paylaşınca sürücü bozuluyor. Çözüm: `sim.launch.py` Gazebo
+sunucusunu `LIBGL_ALWAYS_SOFTWARE=1` ile, pencereyi ekran kartıyla ayrı süreçlerde
+açıyor; RViz de yazılımsal çizimle açılıyor. Doğrulandı: ölçümler doğru, RViz harita ve
+LiDAR noktalarını gösteriyor, kaydedilen harita (220 × 381 hücre, 5 cm) sahaya uyuyor.
+Gazebo Harmonic'te CPU tabanlı LiDAR yok (gz-sim 10'la geliyor).
+Teşhis aracı: `ros/forklift_sim/scripts/lidar_kontrol.py`.
 
 ## Kodun durumu
 
@@ -93,7 +91,7 @@ Gazebo Harmonic'te CPU tabanlı LiDAR yok (gz-sim 10'la geliyor), o yol kapalı.
 | Çizgi takibi | Algılama hazır (sapma ve açı), sürüşe bağlı değil; piksel → mm kalibrasyonu yok |
 | Simülasyon (`ros/forklift_sim`) | Saha, yer işaretleri, diferansiyel sürüşlü robot ve LiDAR sanal makinede çalışıyor; klavyeyle sürüş denendi. Kapı, şerit, QR görselleri, kamera, çatal yok |
 | Sürüş, odometri, konum | Simülasyonda `/cmd_vel`, `/odom`, `/scan` var; PLC paketine bağlı değil (konum 0,00 gidiyor) |
-| Haritalama | `harita.launch.py` çalışıyor ve harita kaydediliyor, ama **harita yanlış çıkıyor** (aşağıdaki açık soruna bakın) |
+| Haritalama | Simülasyonda çalışıyor: klavyeyle gezdirilerek iki oda ve geçit doğru haritalandı, `~/saha_haritasi.pgm/.yaml` olarak sanal makinede kayıtlı (repoda değil) |
 | Rota planlama | `mission/rota_planlayici.py`: takım arkadaşı (Şevval) Dijkstra ile ekledi; nokta grafiği ve mesafeler örnek değerler, A3/B2/B3 henüz yok. Görev alınınca rota hesaplanıp arayüz durumuna (`aktif_rota`) yazılıyor, harekete bağlı değil |
 | Engelde durma | Yok |
 | Kaldırma, acil stop, mod anahtarı donanımı | Yok (mod yalnızca geliştirme panelinden değişiyor) |
@@ -104,7 +102,7 @@ Gazebo Harmonic'te CPU tabanlı LiDAR yok (gz-sim 10'la geliyor), o yol kapalı.
 2. Gazebo'da saha ve basit robot modeli: ilk sürüm çalışıyor. Kapı, şeritler,
    QR görselleri ve kamera daha sonra eklenecek.
 3. Sürüş ve odometri; konumu PLC paketine bağlamak.
-4. Haritalama (slam_toolbox) ve haritayı kaydetme.
+4. ~~Haritalama (slam_toolbox) ve haritayı kaydetme.~~ Simülasyonda tamamlandı.
 5. Arayüzde rota tanımlama, en kısa yol hesabı, yol takibi.
 6. Durum makinesindeki zamanlayıcıları gerçek olaylarla değiştirmek.
 7. Çizgi takibini sürüşe bağlamak, QR konumu (solvePnP), yük alma yanaşması.
